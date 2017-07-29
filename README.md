@@ -1,0 +1,1 @@
+Ping a server with a java function and return details about the server.
