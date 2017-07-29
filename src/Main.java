@@ -8,27 +8,25 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        Serverinfo("eu.mineplex.com", 25565);
+        Serverinfo("198.24.164.162", 33399);
     }
 
-    public static void Serverinfo(String IP, int Port) throws IOException {
-        int port = Port;
-        InetSocketAddress host = new InetSocketAddress(IP, port);
+    private static void Serverinfo(String IP, int Port) throws IOException {
+        InetSocketAddress host = new InetSocketAddress(IP, Port);
         Socket socket = new Socket();
         socket.connect(host, 3000);
         DataOutputStream output = new DataOutputStream(socket.getOutputStream());
         DataInputStream input = new DataInputStream(socket.getInputStream());
-        byte[] handshakeMessage = createHandshakeMessage(IP, port);
+        byte[] handshakeMessage = createHandshakeMessage(IP, Port);
         writeVarInt(output, handshakeMessage.length);
         output.write(handshakeMessage);
         output.writeByte(0x01);
         output.writeByte(0x00);
-        int size = readVarInt(input);
+        @SuppressWarnings("UnusedAssignment") int size = readVarInt(input);
         int packetId = readVarInt(input);
 
         if (packetId == -1) {
@@ -78,31 +76,31 @@ public class Main {
         JsonElement maxonline = players.getAsJsonObject().get("max");
         JsonElement desc = jobject.get("description");
 
-        System.out.print("Server address: " + IP + ":" + port + "\n");
+        System.out.print("Server address: " + IP + ":" + Port + "\n");
         System.out.print("Description: " + desc.toString() + "\n");
         System.out.print("Server Type: " + name + "\n");
         System.out.print("Players Online: " + playersonline + "/" + maxonline + "\n");
         System.out.print("Server Protocol: " + protocol + "\n");
         System.out.print("---------------------------------------------------------" + "\n");
     }
-    public static byte[] createHandshakeMessage(String host, int port) throws IOException {
+    private static byte[] createHandshakeMessage(String host, int port) throws IOException {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 
         DataOutputStream handshake = new DataOutputStream(buffer);
         handshake.writeByte(0x00);
         writeVarInt(handshake, 4);
-        writeString(handshake, host, StandardCharsets.UTF_8);
+        writeString(handshake, host);
         handshake.writeShort(port);
         writeVarInt(handshake, 1);
 
         return buffer.toByteArray();
     }
-    public static void writeString(DataOutputStream out, String string, Charset charset) throws IOException {
-        byte[] bytes = string.getBytes(charset);
+    private static void writeString(DataOutputStream out, String string) throws IOException {
+        byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
         writeVarInt(out, bytes.length);
         out.write(bytes);
     }
-    public static void writeVarInt(DataOutputStream out, int paramInt) throws IOException {
+    private static void writeVarInt(DataOutputStream out, int paramInt) throws IOException {
         while (true) {
             if ((paramInt & 0xFFFFFF80) == 0) {
                 out.writeByte(paramInt);
@@ -112,7 +110,7 @@ public class Main {
             paramInt >>>= 7;
         }
     }
-    public static int readVarInt(DataInputStream in) throws IOException {
+    private static int readVarInt(DataInputStream in) throws IOException {
         int i = 0;
         int j = 0;
         while (true) {
